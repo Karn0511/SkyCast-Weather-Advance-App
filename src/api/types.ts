@@ -50,6 +50,10 @@ export interface ForecastData {
     weather: WeatherData["weather"];
     wind: WeatherData["wind"];
     dt_txt: string;
+    pop: number;
+    rain?: {
+      "3h": number;
+    };
   }>;
   city: {
     name: string;

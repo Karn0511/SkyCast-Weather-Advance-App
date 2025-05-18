@@ -13,6 +13,7 @@ import { WeatherForecast } from "../components/weather-forecast";
 import { HourlyTemperature } from "../components/hourly-temprature";
 import WeatherSkeleton from "../components/loading-skeleton";
 import { FavoriteCities } from "@/components/favorite-cities";
+import { RainfallForecast } from "@/components/rainfall-forecast";
 
 export function WeatherDashboard() {
   const {
@@ -122,9 +123,16 @@ export function WeatherDashboard() {
           <HourlyTemperature data={forecastQuery.data} />
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2 items-start">
-          <WeatherDetails data={weatherQuery.data} />
-          <WeatherForecast data={forecastQuery.data} />
+        <div className="grid gap-6 md:grid-cols-3 items-stretch h-full">
+          <div className="h-full">
+            <WeatherDetails data={weatherQuery.data} />
+          </div>
+          <div className="h-full">
+            <WeatherForecast data={forecastQuery.data} />
+          </div>
+          <div className="h-full">
+            <RainfallForecast data={forecastQuery.data} />
+          </div>
         </div>
       </div>
     </div>

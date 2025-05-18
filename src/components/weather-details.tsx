@@ -51,23 +51,23 @@ export function WeatherDetails({ data }: WeatherDetailsProps) {
   ];
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Weather Details</CardTitle>
+    <Card className="h-full">
+      <CardHeader className="pb-4">
+        <CardTitle className="text-xl">Weather Details</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid gap-6 sm:grid-cols-2">
+        <div className="grid gap-8 sm:grid-cols-2 h-[calc(100%-2rem)]">
           {details.map((detail) => (
             <div
               key={detail.title}
-              className="flex items-center gap-3 rounded-lg border p-4"
+              className="flex items-center gap-4 rounded-lg border p-6"
             >
-              <detail.icon className={`h-5 w-5 ${detail.color}`} />
+              <detail.icon className={`h-8 w-8 ${detail.color}`} />
               <div>
-                <p className="text-sm font-medium leading-none">
+                <p className="text-base font-medium leading-none mb-2">
                   {detail.title}
                 </p>
-                <p className="text-sm text-muted-foreground">{detail.value}</p>
+                <p className="text-lg text-muted-foreground">{detail.value}</p>
               </div>
             </div>
           ))}
