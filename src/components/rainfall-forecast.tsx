@@ -1,83 +1,101 @@
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { ForecastData } from "@/api/types";
-import { Droplets } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { ForecastData } from '@/api/types';
+import { Droplets } from 'lucide-react';
+import { format } from 'date-fns';
 
 interface RainfallForecastProps {
-  data: ForecastData;
+	data: ForecastData;
+}
+
+interface DailyRainfall {
+	date: number;
+	probability: number;
+	amount: number;
 }
 
 export function RainfallForecast({ data }: RainfallForecastProps) {
-  // Get next 24 hours of forecast data
-  const next24Hours = data.list.slice(0, 8);
+	// Group forecast by day and calculate daily rainfall
+	const dailyRainfall = data.list.reduce((acc, forecast) => {
+		const date = format(new Date(forecast.dt * 1000), 'yyyy-MM-dd');
+		const probability = forecast.pop * 100 || 0;
+		const amount = forecast.rain?.['3h'] || 0;
 
-  // Calculate average rainfall probability and accumulation
-  const rainfallData = next24Hours.map((item) => ({
-    time: new Date(item.dt * 1000).toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    }),
-    probability: (item as any).pop * 100 || 0, // Probability of precipitation
-    amount: (item as any).rain?.["3h"] || 0, // Rain amount in mm for 3 hours
-  }));
+		if (!acc[date]) {
+			acc[date] = {
+				date: forecast.dt,
+				probability: probability,
+				amount: amount,
+				count: 1,
+			};
+		} else {
+			acc[date].probability += probability;
+			acc[date].amount += amount;
+			acc[date].count += 1;
+		}
 
-  const averageProbability =
-    rainfallData.reduce((acc, curr) => acc + curr.probability, 0) /
-    rainfallData.length;
-  const totalRainfall = rainfallData.reduce(
-    (acc, curr) => acc + curr.amount,
-    0
-  );
+		return acc;
+	}, {} as Record<string, DailyRainfall & { count: number }>);
 
-  return (
-    <Card className="h-full">
-      <CardHeader className="flex flex-row items-center justify-between pb-4">
-        <CardTitle className="text-xl">Rainfall Forecast</CardTitle>
-        <Droplets className="h-6 w-6 text-blue-500" />
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-8">
-          <div>
-            <p className="text-3xl font-bold">
-              {totalRainfall.toFixed(1)}
-              <span className="text-base font-normal text-muted-foreground ml-1">
-                mm
-              </span>
-            </p>
-            <p className="text-sm text-muted-foreground mt-1">
-              Expected rainfall (24h)
-            </p>
-          </div>
-          <div>
-            <p className="text-2xl font-semibold">
-              {Math.round(averageProbability)}
-              <span className="text-base font-normal text-muted-foreground ml-1">
-                %
-              </span>
-            </p>
-            <p className="text-sm text-muted-foreground mt-1">
-              Chance of precipitation
-            </p>
-          </div>
-          <div className="space-y-4">
-            <p className="text-lg font-medium">Hourly Forecast</p>
-            <div className="grid grid-cols-4 gap-4">
-              {rainfallData.slice(0, 4).map((data, index) => (
-                <div key={index} className="text-center p-3 rounded-lg border">
-                  <p className="text-sm text-muted-foreground mb-2">
-                    {data.time}
-                  </p>
-                  <p className="text-lg font-medium mb-1">
-                    {Math.round(data.probability)}%
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {data.amount.toFixed(1)}mm
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
+	// Convert to array and calculate averages
+	const nextDays = Object.values(dailyRainfall)
+		.map((day) => ({
+			date: day.date,
+			probability: day.probability / day.count,
+			amount: day.amount,
+		}))
+		.slice(0, 5); // Get next 5 days
+
+	return (
+		<Card className="h-full">
+			<CardHeader className="flex flex-row items-center justify-between pb-4">
+				<CardTitle className="text-xl">
+					5-Day Rainfall Forecast
+				</CardTitle>
+				<Droplets className="h-6 w-6 text-blue-500" />
+			</CardHeader>
+			<CardContent>
+				<div className="space-y-4">
+					{nextDays.map((day, index) => (
+						<div
+							key={index}
+							className="flex flex-col gap-2 rounded-lg border p-4"
+						>
+							<div className="flex items-center justify-between">
+								<p className="font-medium">
+									{format(
+										new Date(day.date * 1000),
+										'EEE, MMM d'
+									)}
+								</p>
+								<p className="text-lg font-semibold">
+									{day.amount.toFixed(1)}
+									<span className="text-base font-normal text-muted-foreground ml-1">
+										mm
+									</span>
+								</p>
+							</div>
+							<div className="flex items-center justify-between">
+								<p className="text-sm text-muted-foreground">
+									Chance of rain
+								</p>
+								<p className="text-base font-medium">
+									{Math.round(day.probability)}%
+								</p>
+							</div>
+							<div className="relative h-2 w-full rounded-full bg-muted">
+								<div
+									className="absolute left-0 top-0 h-full rounded-full bg-blue-500"
+									style={{
+										width: `${Math.round(
+											day.probability
+										)}%`,
+									}}
+								/>
+							</div>
+						</div>
+					))}
+				</div>
+			</CardContent>
+		</Card>
+	);
 }
