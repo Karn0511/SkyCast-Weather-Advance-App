@@ -9,17 +9,23 @@ export const WEATHER_KEYS = {
   search: (query: string) => ["location-search", query] as const,
 } as const;
 
+const defaultOptions = {
+  staleTime: 5 * 60 * 1000, // 5 minutes cache
+  retry: 2, // Retry twice on failure
+};
+
 export function useWeatherQuery(coordinates: Coordinates | null) {
   return useQuery({
+    ...defaultOptions,
     queryKey: WEATHER_KEYS.weather(coordinates ?? { lat: 0, lon: 0 }),
-    queryFn: () =>
-      coordinates ? weatherAPI.getCurrentWeather(coordinates) : null,
+    queryFn: () => coordinates ? weatherAPI.getCurrentWeather(coordinates) : null,
     enabled: !!coordinates,
   });
 }
 
 export function useForecastQuery(coordinates: Coordinates | null) {
   return useQuery({
+    ...defaultOptions,
     queryKey: WEATHER_KEYS.forecast(coordinates ?? { lat: 0, lon: 0 }),
     queryFn: () => (coordinates ? weatherAPI.getForecast(coordinates) : null),
     enabled: !!coordinates,
@@ -28,15 +34,16 @@ export function useForecastQuery(coordinates: Coordinates | null) {
 
 export function useReverseGeocodeQuery(coordinates: Coordinates | null) {
   return useQuery({
+    ...defaultOptions,
     queryKey: WEATHER_KEYS.location(coordinates ?? { lat: 0, lon: 0 }),
-    queryFn: () =>
-      coordinates ? weatherAPI.reverseGeocode(coordinates) : null,
+    queryFn: () => coordinates ? weatherAPI.reverseGeocode(coordinates) : null,
     enabled: !!coordinates,
   });
 }
 
 export function useLocationSearch(query: string) {
   return useQuery({
+    ...defaultOptions,
     queryKey: WEATHER_KEYS.search(query),
     queryFn: () => weatherAPI.searchLocations(query),
     enabled: query.length >= 3,
